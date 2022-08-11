@@ -1,0 +1,12 @@
+scipy
+numpy
+streamlit
+scikit-learn
+pandas
+tables
+seaborn
+plotly
+tqdm
+notebook
+matplotlib
+unidecode

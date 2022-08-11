@@ -1,0 +1,16 @@
+name: acikhack
+channel_priority: strict
+channels:
+  - conda-forge
+  - pytorch
+dependencies:
+  - python=3.8.12
+  - pytorch
+  - torchvision
+  - torchaudio
+  - cudatoolkit=10.2
+  - pip
+  - pip:
+      - pip-tools
+      - -r req.txt
+
