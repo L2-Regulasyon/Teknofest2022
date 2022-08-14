@@ -1,6 +1,7 @@
 import unidecode
 import numpy as np
 import re
+import constants
 
 class FeatureExtractor:
     def __init__(self):
@@ -25,7 +26,7 @@ class BelgeSayisiExtractor(FeatureExtractor):
     def __init__(self):
         super().__init__()
         self.feature_name = "belge_sayi"
-        self.cols = ["Genelge"]
+        self.cols = constants.COLS_BELGE_SAYISI
 
     def _extractor_func(self, row_data):
         std_txt = unidecode.unidecode(row_data.data_text).lower()
@@ -46,8 +47,7 @@ class MaddeSayisiExtractor(FeatureExtractor):
     def __init__(self):
         super().__init__()
         self.feature_name = "madde_sayisi"
-        self.cols = ["Kanun", "Kanun Hükmünde Kararname", "Cumhurbaşkanlığı Kararnamesi",
-                     "Tüzük", "Yönetmelik"]
+        self.cols = constants.COLS_MADDE_SAYISI
 
     def _extractor_func(self, row_data):
         std_txt = unidecode.unidecode(row_data.data_text).lower()
@@ -71,9 +71,7 @@ class MevzuatNoExtractor(FeatureExtractor):
     def __init__(self):
         super().__init__()
         self.feature_name = "mevzuat_no"
-        self.cols = ["Kanun", "Kanun Hükmünde Kararname",
-                     "Genelge", "Cumhurbaşkanlığı Kararnamesi",
-                     "Tüzük", "Yönetmelik"]
+        self.cols = constants.COLS_MEVZUAT_NO
 
     def _extractor_func(self, row_data):
         std_txt = unidecode.unidecode(row_data.data_text).lower()
@@ -137,9 +135,7 @@ class RegaTarihiExtractor(FeatureExtractor):
     def __init__(self):
         super().__init__()
         self.feature_name = "rega_tarihi"
-        self.cols = ["Kanun", "Kanun Hükmünde Kararname","Resmi Gazete"
-                      "Cumhurbaşkanlığı Kararnamesi",
-                     "Tüzük", "Yönetmelik","Tebliğ"]
+        self.cols = constants.COLS_REGA_TARIHI
     
     def _extractor_func(self, row_data):
         std_txt = unidecode.unidecode(row_data.data_text).lower()
@@ -157,9 +153,7 @@ class MevzuatTarihiExtractor(FeatureExtractor):
     def __init__(self):
         super().__init__()
         self.feature_name = "mevzuat_tarihi"
-        self.cols = ["Kanun", "Kanun Hükmünde Kararname",
-                     "Genelge", "Cumhurbaşkanlığı Kararnamesi",
-                     "Tüzük", "Özelge"]
+        self.cols = constants.COLS_MEVZUAT_TARIHI
     
     def _extractor_func(self, row_data):
         std_txt = unidecode.unidecode(row_data.data_text).lower()
