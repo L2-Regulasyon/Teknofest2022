@@ -2,6 +2,7 @@ from functools import reduce
 from utils import FeatureExtractor
 import numpy as np
 import pandas as pd
+import constants
 
 def filter_dataframe(input_df: pd.DataFrame,
                      selected_categories: list = [],
@@ -30,11 +31,15 @@ def show_false_predictions(input_df: pd.DataFrame,
     tmp_df = tmp_df[tmp_df.kategori.isin(feature_extractor.cols)].copy()
 
     label = feature_extractor.feature_name
+    label_pred = label + "_pred"
+    tmp_df.loc[tmp_df[label_pred].isna(), label_pred] = constants.NAN_LABEL
 
     if not include_na:
         tmp_df = tmp_df[~tmp_df[label].isna()]
+    else:
+        tmp_df.loc[tmp_df[label].isna(), label] = constants.NAN_LABEL
 
-    return tmp_df[tmp_df[label] != tmp_df[label+"_pred"]][[label, label+"_pred"] + cols][:first_n]
+    return tmp_df[tmp_df[label] != tmp_df[label_pred]][[label, label_pred] + cols][:first_n]
 
 
 def calculate_accuracy(input_df: pd.DataFrame,
@@ -46,11 +51,15 @@ def calculate_accuracy(input_df: pd.DataFrame,
     tmp_df = tmp_df[tmp_df.kategori.isin(feature_extractor.cols)].copy()
 
     label = feature_extractor.feature_name
+    label_pred = label + "_pred"
+    tmp_df.loc[tmp_df[label_pred].isna(), label_pred] = constants.NAN_LABEL
 
     if not include_na:
         tmp_df = tmp_df[~tmp_df[label].isna()]
+    else:
+        tmp_df.loc[tmp_df[label].isna(), label] = constants.NAN_LABEL
 
-    tp_count = len(tmp_df[tmp_df[label] == tmp_df[label+"_pred"]])
+    tp_count = len(tmp_df[tmp_df[label] == tmp_df[label_pred]])
 
     accuracy = np.round((tp_count / len(tmp_df)), 4)
     result_string = "Veri Sayisi: " + str(len(tmp_df)) + "\nDogru Tahmin Sayisi: " +\

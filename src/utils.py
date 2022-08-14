@@ -78,6 +78,7 @@ class MevzuatNoExtractor(FeatureExtractor):
         mevzuat_no = np.nan
 
         try:
+            kaysis_ekbelge_exception = False
             #######################################################
             if row_data.kategori == 'Kanun':
                 mevzuat_no = std_txt.split('\nkanun no. ')[-1] \
@@ -100,11 +101,131 @@ class MevzuatNoExtractor(FeatureExtractor):
                             mevzuat_no = std_txt.split('seri no: ')[-1]
                         else:
                             pass  # there is no mevzuat-no
+                ########
                 elif 'kms.kaysis.gov.tr' in row_data.url:
-                    std_txt = std_txt.replace("genelge ", "genelge").replace("\n\n", "\n")
-                    mevzuat_no = std_txt.split('\ngenelge\n')[1] \
-                        .split("\n")[0].replace(" ", "").replace("-", "/")
-                    mevzuat_no = "/".join(substr.rjust(2, '0') for substr in mevzuat_no.split("/"))
+                    date_formatted_regexp = '(([0-9]{4})[\/-][\s]*[0-9]*[-]*[0-9]+)+'
+
+                    # trying to find from title
+                    try:  # date format
+                        std_txt = unidecode.unidecode(row_data.baslik).lower()
+
+                        if "degisik" in std_txt:
+                            std_txt = std_txt.split("degisik")[-1]
+
+                        if "iliskin" in std_txt:
+                            iliskin_splitted = std_txt.split("iliskin")[-1]
+                            iliskin_splitted_founds = re.findall(date_formatted_regexp, iliskin_splitted)
+                            if len(iliskin_splitted_founds) > 0:
+                                std_txt = iliskin_splitted
+
+                        found_date_typeds = re.findall(date_formatted_regexp, std_txt)
+                        mevzuat_no = found_date_typeds[0][0]
+
+                        # adaptation for year/month-serie format
+                        mevzuat_no = mevzuat_no.replace("/", "-")
+                        kaysis_ekbelge_exception = mevzuat_no.count("-") > 1
+                        mevzuat_no = mevzuat_no.replace("-", "/", 1) if kaysis_ekbelge_exception else mevzuat_no.replace("-", "/")
+
+                    # it's not in title
+                    except:
+                        # trying to find from text
+                        try:
+                            std_txt = unidecode.unidecode(row_data.data_text).lower()
+                            std_txt = std_txt.replace("genelge ", "genelge").replace("\n\n", "\n")
+                            mevzuat_no = std_txt.split('\ngenelge\n')[-1].split("\n")[0]
+                        # there isn't any mevzuat no (we hope not)
+                        except:
+                            pass
+                ########
+                elif 'mevzuat.gov.tr' in row_data.url:
+                    # if the url consists the mevzuat_kod directly
+                    if "MevzuatKod" in row_data.url:
+                        mevzuat_no = row_data.url.split("MevzuatKod=")[-1].split("&")[0]
+                    # if doesn't consist
+                    else:
+                        url_regexp = "(([0-9]{8})[\/-][\s]*[0-9]*[-]*[0-9]+)+"
+
+                        # trying to find from url
+                        try:
+                            std_txt = unidecode.unidecode(row_data.url).lower()
+                            url_founds = re.findall(url_regexp, std_txt)[-1][0]
+                            year = url_founds[:4]
+                            serie = url_founds.split("-")[-1]
+                            mevzuat_no = year + "/" + serie
+                        # there isn't any mevzuat no (we hope not)
+                        except:
+                            pass
+                ########
+                elif 'bddk.org.tr' in row_data.url:
+                    # trying to find from text
+                    try:
+                        std_txt = unidecode.unidecode(row_data.data_text).lower()
+                        std_txt = std_txt.replace("genelge ", "genelge").replace("\n\n", "\n").replace("\n\n", "\n")
+                        mevzuat_no = std_txt.split('genelge\n')[-1].split("\n")[0]
+                    # there isn't any mevzuat no (we hope not)
+                    except:
+                        pass
+                ########
+                elif 'sgk.gov.tr' in row_data.url:
+                    date_formatted_regexp = '(([0-9]{4})[\/-][\s]*[0-9]*[-]*[0-9]+)+'
+                    # trying to find from title
+                    try:  # date format
+                        std_txt = unidecode.unidecode(row_data.baslik).lower()
+                        mevzuat_no = re.findall(date_formatted_regexp, std_txt)[0][0]
+                    # there isn't any mevzuat no (we hope not)
+                    except:
+                        pass
+                ########
+                elif 'tspakb.org.tr' in row_data.url:
+                    # trying to find from text
+                    try:
+                        std_txt = unidecode.unidecode(row_data.data_text).lower().replace("\ngenelge no: ", '\ngenelge no:')
+                        mevzuat_no = std_txt.split('\ngenelge no:')[-1].split("\n")[0]
+                    # there isn't any mevzuat no (we hope not)
+                    except:
+                        pass
+                ########
+                elif 'borsaistanbul.com' in row_data.url:
+                    # trying to find from title
+                    try:
+                        std_txt = unidecode.unidecode(row_data.baslik).lower()
+                        mevzuat_no = re.sub("[^0-9]", "", std_txt) # leaving only numericals
+                    # there isn't any mevzuat no (we hope not)
+                    except:
+                        pass
+                ########
+                elif 'tkgm.gov.tr' in row_data.url:
+                    std_txt = unidecode.unidecode(row_data.data_text).lower()
+                    # trying to find from text
+                    try:
+                        std_txt = std_txt.replace("no ", "no").replace(":", "")
+                        std_txt = std_txt.split("genelge no")[-1].split("\n")[0]
+                        four_digit_regex = "(([:\s]|^)[0-9]{4}([\s]|$))+"
+                        year_mo_regex = "[0-9]{4}[/-][0-9]+"
+                        four_digit_founds = re.findall(four_digit_regex, std_txt)
+                        year_mo_founds = re.findall(year_mo_regex, std_txt)
+
+                        if len(four_digit_founds) > 0:
+                            mevzuat_no = four_digit_founds[0][0]
+                        else:
+                            mevzuat_no = year_mo_founds[0]
+                    except:
+                        # trying to find from title
+                        try:
+                            std_txt = unidecode.unidecode(row_data.baslik).lower()
+                            mevzuat_no = std_txt.split("sayili")[0].split(",")[-1]
+                        # there isn't any mevzuat no (we hope not)
+                        except:
+                            pass
+                ########
+                elif 'resmigazete.gov.tr' in row_data.url:
+                    std_txt = unidecode.unidecode(row_data.data_text).lower()
+                    # trying to find from text
+                    try:
+                        std_txt = std_txt.replace("no", "no").replace(" ", "").replace("\n\n", "\n").replace("\n\n", "\n")
+                        mevzuat_no = std_txt.split("genelge\n")[-1].split("\n")[0]
+                    except:
+                        pass
             #######################################################
             elif row_data.kategori == 'Cumhurbaşkanlığı Kararnamesi':
                 std_txt = unidecode.unidecode(row_data.baslik).lower()
@@ -126,6 +247,11 @@ class MevzuatNoExtractor(FeatureExtractor):
                         .split("&")[0]
                 if len(mevzuat_no) > 4:
                     mevzuat_no = mevzuat_no[:4] + "/" + mevzuat_no[4:]
+
+            if not kaysis_ekbelge_exception:
+                mevzuat_no = mevzuat_no.replace("-", "/").replace(" ", "").replace(":", "")
+
+        # there is no mevzuat_no
         except:
             pass
 

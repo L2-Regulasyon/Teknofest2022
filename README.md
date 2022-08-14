@@ -36,3 +36,15 @@ ve oluşturduğunuz en güncel gereksinim listesini aşağıdaki komut ile ortam
 ```
 pip install -r req.txt
 ```
+
+---
+
+### Veri ile ilgili problemler
+Yarışma dahilinde ekibimize sağlanan veride bazı tutarsızlıklar ve çıkmazlar olduğunu keşfettik. Bunlar aşağıdaki şekilde sıralanabilir:
+
+##### Mevzuat No
+- Genelge tipi mevzuat numaralarına ait asli etiket değerlerinin (ground truth) bazıları `2017/9` formatında verilmişken bazıları ise `2017/09` formatında verilmiş. Ürettiğimiz çözüm başa sıfır koyma işlemini (zero-padding) yapmıyor olacak. (`2017/09`)
+- Genelge tipi mevzuat numaralarına ait asli etiket değerlerinin (ground truth) bazıları `2017/9` formatında verilmişken bazıları ise `2017 /09`, `2017 / 09` gibi boşluk hataları ile verilmiş. Ürettiğimiz çözüm çıktıyı standardize etmek adına boşlukları siliyor (`2017/09`). Bu yüzden bu tip hatalara sahip asli etiket değerine sahip olan satırlar tahmin yanlışmış gibi sahte bir sonuç üretebilir.
+- `KAYSIS` kaynaklı bazı verilerde asıl etiket değeri `32945953-010.06.01-E.1046330` kodunun `1046330` kısmı olarak verilmişken bazı verilerde `YIL/NUMARA` olarak verilmiş. Satırlardan iki türlü de veri alabiliyoruz fakat beklenen formatın hangisi olduğu net olmadığı için `YIL/NUMARA` formatında bıraktık.
+- Bazı verilerin mevzuat numaralarının tamamı ya da bir kısmı el ile yazıldığı için OCR tarafından eksik veya hatalı okunmuş. Modelin yanlışlarının bazıları OCR'dan gelen ham verinin yanlışlığından kaynaklanıyor. Orjinal siteye gidip veriyi özel bir şekilde işlemek hem zaman hem kaynak açısından problemli olacağından bu kol üzerine yoğunlaşmadık.
+- `https://kms.kaysis.gov.tr/Home/Goster/68870` adresine sahip verinin text sütunu hatalı olduğu için herhangi bir şekilde veri çıkarmak mümkün değil.
