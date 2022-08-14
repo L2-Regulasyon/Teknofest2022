@@ -133,24 +133,45 @@ class MevzuatNoExtractor(FeatureExtractor):
 
         return mevzuat_no
 
+class RegaTarihiExtractor(FeatureExtractor):
+    def __init__(self):
+        super().__init__()
+        self.feature_name = "rega_tarihi"
+        self.cols = ["Kanun", "Kanun Hükmünde Kararname","Resmi Gazete"
+                      "Cumhurbaşkanlığı Kararnamesi",
+                     "Tüzük", "Yönetmelik","Tebliğ"]
+    
+    def _extractor_func(self, row_data):
+        std_txt = unidecode.unidecode(row_data.data_text).lower()
+        rega_tarihi = np.nan
+        try:
+            if row_data.kategori == 'Kanun':
+                rega_tarihi = std_txt.split("resmi gazete tarihi: ",1)[1].split('resmi gazete sayisi:',1)[0]
+            elif row_data.kategori == 'Kanun Hükmünde Kararname':
+                rega_tarihi = std_txt.split("resmi gazete tarihi: ", 1)[1].split('resmi gazete sayisi:', 1)[0]
+        except:
+            pass
+        return rega_tarihi
 
-def find_dates(text, date_type, kategori):
-    std_txt = unidecode.unidecode(text).lower()
-    if kategori == 'kanun':
-        if date_type == 'rega':
-            match = std_txt.split("resmi gazete tarihi: ", 1)[1].split('resmi gazete sayisi:', 1)[0]
-        elif date_type == 'mevzuat':
-            match = \
-                std_txt.split("resmi gazete tarihi: ", 1)[1].split('resmi gazete sayisi:', 1)[1].split(
-                    'kabul tarihi : ')[
-                    1].split('\n')[0]
-    elif kategori == 'khk':
-        if date_type == 'rega':
-            match = std_txt.split("resmi gazete tarihi: ", 1)[1].split('resmi gazete sayisi:', 1)[0]
-        elif date_type == 'mevzuat':
-            match = std_txt.split("resmi gazete tarihi: ", 1)[1].split('resmi gazete sayisi:', 1)[1].split(
-                'kararnamenin tarihi : ')[1].split('\n')[0]
-    elif kategori == 'genelge':
-        if date_type == 'mevzuat':
-            match = std_txt.split("tarih ", 1)[1].split('\n')[0]
-    return match
+class MevzuatTarihiExtractor(FeatureExtractor):
+    def __init__(self):
+        super().__init__()
+        self.feature_name = "mevzuat_tarihi"
+        self.cols = ["Kanun", "Kanun Hükmünde Kararname",
+                     "Genelge", "Cumhurbaşkanlığı Kararnamesi",
+                     "Tüzük", "Özelge"]
+    
+    def _extractor_func(self, row_data):
+        std_txt = unidecode.unidecode(row_data.data_text).lower()
+        mevzuat_tarihi = np.nan
+        try:
+            if row_data.kategori == 'Kanun':
+                mevzuat_tarihi = std_txt.split("resmi gazete tarihi: ",1)[1].split('resmi gazete sayisi:',1)[1].split('kabul tarihi : ')[1].split('\n')[0]
+            elif row_data.kategori == 'Kanun Hükmünde Kararname':
+                mevzuat_tarihi = std_txt.split("resmi gazete tarihi: ",1)[1].split('resmi gazete sayisi:',1)[1].split('kararnamenin tarihi : ')[1].split('\n')[0]
+            elif row_data.kategori == 'Genelge':
+                mevzuat_tarihi = std_txt.split("tarih ", 1)[1].split('\n')[0] 
+        except:
+            pass
+        return mevzuat_tarihi
+
