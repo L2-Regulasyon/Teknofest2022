@@ -2,6 +2,7 @@ import unidecode
 import numpy as np
 import re
 import constants
+import pandas as pd
 
 class FeatureExtractor:
     def __init__(self):
@@ -260,19 +261,38 @@ class MevzuatNoExtractor(FeatureExtractor):
 class RegaTarihiExtractor(FeatureExtractor):
     def __init__(self):
         super().__init__()
-        self.feature_name = "rega_tarihi"
         self.cols = constants.COLS_REGA_TARIHI
-    
+        self.cols = ["Kanun", "Kanun Hükmünde Kararname","Resmi Gazete","Cumhurbaşkanlığı Kararnamesi",
+                     "Tüzük", "Yönetmelik","Tebliğ"]
+
     def _extractor_func(self, row_data):
-        std_txt = unidecode.unidecode(row_data.data_text).lower()
         rega_tarihi = np.nan
+        std_txt = unidecode.unidecode(row_data.data_text).lower()
         try:
             if row_data.kategori == 'Kanun':
                 rega_tarihi = std_txt.split("resmi gazete tarihi: ",1)[1].split('resmi gazete sayisi:',1)[0]
+            #######################################################
             elif row_data.kategori == 'Kanun Hükmünde Kararname':
-                rega_tarihi = std_txt.split("resmi gazete tarihi: ", 1)[1].split('resmi gazete sayisi:', 1)[0]
+                rega_tarihi =  std_txt.split("resmi gazete tarihi: ", 1)[1].split('resmi gazete sayisi:', 1)[0]
+            #######################################################
+            elif row_data.kategori == 'Resmi Gazete':
+                std_txt = unidecode.unidecode(row_data.baslik).lower()
+                rega_tarihi = std_txt.replace(' ','').split('tarihli',1)[0]
+            #######################################################
+            elif row_data.kategori == "Cumhurbaşkanlığı Kararnamesi":
+                rega_tarihi = std_txt.split("resmi gazete tarihi: ",1)[1].split('resmi gazete sayisi:',1)[0].replace(" ","")
+            #######################################################
+            elif row_data.kategori == 'Tüzük':  
+                rega_tarihi=std_txt.split("resmi gazete tarihi: ",1)[1].split('resmi gazete sayisi:',1)[0].replace(" ","")
+            #######################################################
+            elif row_data.kategori == 'Yönetmelik':
+                rega_tarihi = std_txt.split("resmi gazete tarihi: ",1)[1].split('resmi gazete sayisi:',1)[0]
+            #######################################################
+            elif row_data.kategori == 'Tebliğ':
+                rega_tarihi = std_txt.split("resmi gazete tarihi: ",1)[1].split('resmi gazete sayisi:',1)[0]
         except:
             pass
+        rega_tarihi=pd.to_datetime(rega_tarihi,dayfirst=True)
         return rega_tarihi
 
 class MevzuatTarihiExtractor(FeatureExtractor):
@@ -286,12 +306,61 @@ class MevzuatTarihiExtractor(FeatureExtractor):
         mevzuat_tarihi = np.nan
         try:
             if row_data.kategori == 'Kanun':
-                mevzuat_tarihi = std_txt.split("resmi gazete tarihi: ",1)[1].split('resmi gazete sayisi:',1)[1].split('kabul tarihi : ')[1].split('\n')[0]
+                mevzuat_tarihi = pd.to_datetime(std_txt.split("resmi gazete tarihi: ",1)[1].split('resmi gazete sayisi:',1)[1].split('kabul tarihi : ')[1].split('\n')[0],dayfirst=True)
+            #######################################################
             elif row_data.kategori == 'Kanun Hükmünde Kararname':
-                mevzuat_tarihi = std_txt.split("resmi gazete tarihi: ",1)[1].split('resmi gazete sayisi:',1)[1].split('kararnamenin tarihi : ')[1].split('\n')[0]
-            elif row_data.kategori == 'Genelge':
-                mevzuat_tarihi = std_txt.split("tarih ", 1)[1].split('\n')[0] 
+                mevzuat_tarihi = pd.to_datetime(std_txt.split("resmi gazete tarihi: ",1)[1].split('resmi gazete sayisi:',1)[1].split('kararnamenin tarihi : ')[1].split('\n')[0],dayfirst=True)
+            #######################################################
+            #elif row_data.kategori == 'Genelge':
+                #mevzuat_tarihi = std_txt.replace(" ", "").replace("\n", ",").replace(",", " ").replace("\n", ",").replace(",", " ").split("sayi:",1)[0].split(' ')
+            #######################################################
+            elif row_data.kategori == 'Cumhurbaşkanlığı Kararnamesi':
+                mevzuat_tarihi = row_data.data_text.split('\n')[-1]
+                mevzuat_tarihi = pd.to_datetime(dateparser.parse(mevzuat_tarihi,languages=['tr']),dayfirst=True)
+            #######################################################
+            elif row_data.kategori == 'Tüzük':
+                mevzuat_tarihi = pd.to_datetime(std_txt.split("bkk no: ",1)[0].split("karar tarihi: ",1)[1].replace(",","").replace(" ",""),dayfirst=True)
+            #######################################################
+            elif row_data.kategori == 'Özelge':
+                mevzuat_tarihi = std_txt.split("konu",1)[0].split("\n\n")
+                try:
+                    while '' in mevzuat_tarihi:
+                        mevzuat_tarihi.remove('')
+                    try:
+                        mevzuat_tarihi=pd.to_datetime(mevzuat_tarihi[-1],dayfirst=True)
+                    except:
+                        mevzuat_tarihi=pd.to_datetime(std_txt.split("tarih",1)[1].split('sayi')[0])
+                except:
+                    mevzuat_tarihi=std_txt.split("*",1)[0].split(" ")[-1]
+                    try:
+                        mevzuat_tarihi=pd.to_datetime(mevzuat_tarihi,dayfirst=True)
+                    except:
+                        mevzuat_tarihi=std_txt.split("sayi",1)[0].split('tarih')[1].replace('\n','').replace(" ","").replace(":","")
+                        try:
+                            mevzuat_tarihi=pd.to_datetime(mevzuat_tarihi,dayfirst=True)
+                        except:
+                            mevzuat_tarihi=pd.to_datetime(std_txt.split('sayi')[0].split('tarih')[-1],dayfirst=True)
+                            try:
+                                mevzuat_tarihi=pd.to_datetime(mevzuat_tarihi,dayfirst=True)
+                            except:
+                                mevzuat_tarihi=np.nan
+                        
+                #if mevzuat_tarihi==np.nan:
+                #    try:
+                #        std_txt.split("*",1)[0].split(" ")[-1]
+                #    except:
+                #        pass
+                #print(mevzuat_tarihi)    
+            #    while '' in mevzuat_tarihi:
+            #        mevzuat_tarihi.remove('')
+            #    mevzuat_tarihi=mevzuat_tarihi[-2]
+            #    mevzuat_tarihi=dateparser.parse(mevzuat_tarihi)
         except:
             pass
+        #try:
+        #    mevzuat_tarihi=pd.to_datetime(mevzuat_tarihi,dayfirst=True)
+        #except:
+        #    pass
+        #mevzuat_tarihi=datetime.strptime(mevzuat_tarihi, '%Y-%m-%d %H:%M:%S')
         return mevzuat_tarihi
 
