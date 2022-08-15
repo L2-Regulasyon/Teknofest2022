@@ -3,6 +3,7 @@ import numpy as np
 import re
 import constants
 import pandas as pd
+from re import sub
 
 class FeatureExtractor:
     def __init__(self):
@@ -52,18 +53,46 @@ class MaddeSayisiExtractor(FeatureExtractor):
 
     def _extractor_func(self, row_data):
         std_txt = unidecode.unidecode(row_data.data_text).lower()
+        if "resmigazete" in row_data.url:
+            std_txt = sub('"[^"]*[$"]', '', std_txt)
         madde_sayi = np.nan
+        madde_regexp = '[\n]madde[\s]*[0-9]*[\s]*[/]*[\s]*[\w]*\s[-]\s'
+        mukerrer_madde_regexp = '[\n]mukerrer\smadde\s[0-9]+[\s]*[/]*[\s]*[\w]*\s[-]\s'
+        gecici_madde_regexp = '[\n]gecici\smadde\s(([0-9]+|[\w]+)[\(]*[0-9]*[\)]*[\s])*[-]\s'
+        ek_gecici_madde_regexp = '[\n]gecici\sek\smadde\s[[0-9]+[\s]]*[-]\s'
+        ek_madde_regexp = '[\n]ek\smadde[\s]*([0-9])*[/]*[\s]*[\w]*\s-\s'
+
         try:
-            madde_sayi = int(std_txt.replace("-", ":") \
-                             .split('\nmadde ')[-1] \
-                             .split(":")[0])
-            gecici_madde_sayi = int(std_txt.replace("-", ":") \
-                                    .split('\ngecici madde ')[-1] \
-                                    .split(":")[0])
+            madde_list = []
+            for regfound in re.findall(madde_regexp, std_txt):
+                try:
+                    madde_list.append(int(re.sub("[^0-9]", "", regfound)))
+                except:
+                    madde_list.append(1)
+            if "resmigazete" not in row_data.url:
+                madde_sayi = len(madde_list)
+            else:
+                madde_sayi = max(madde_list) + (len(madde_list) - len(set(madde_list)))
+
+            mukerrer_madde_list = [regfound for regfound in re.findall(mukerrer_madde_regexp, std_txt)]
+            mukerrer_madde_sayi = len(mukerrer_madde_list)
+            madde_sayi += mukerrer_madde_sayi
+
+            ek_gecici_madde_list = [regfound for regfound in re.findall(ek_gecici_madde_regexp, std_txt)]
+            ek_gecici_madde_sayi = len(ek_gecici_madde_list)
+            madde_sayi += ek_gecici_madde_sayi
+
+            gecici_madde_list = [regfound for regfound in re.findall(gecici_madde_regexp, std_txt)]
+            gecici_madde_sayi = len(gecici_madde_list)
             madde_sayi += gecici_madde_sayi
 
+            if not "resmigazete" in row_data.url:
+                ek_madde_list = [regfound for regfound in re.findall(ek_madde_regexp, std_txt)]
+                ek_madde_sayi = len(ek_madde_list)
+                madde_sayi += ek_madde_sayi
         except:
             pass
+
         return madde_sayi
 
 
