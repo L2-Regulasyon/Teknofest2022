@@ -321,7 +321,7 @@ class RegaTarihiExtractor(FeatureExtractor):
                 rega_tarihi = std_txt.split("resmi gazete tarihi: ",1)[1].split('resmi gazete sayisi:',1)[0]
         except:
             pass
-        rega_tarihi=pd.to_datetime(rega_tarihi,dayfirst=True)
+        rega_tarihi=str(pd.to_datetime(rega_tarihi,dayfirst=True).date())
         return rega_tarihi
     
 
@@ -361,7 +361,10 @@ class MevzuatTarihiExtractor(FeatureExtractor):
                             try:
                                 mevzuat_tarihi=pd.to_datetime(re.findall(r'\d{2}/\d{2}/\d{4}', std_txt.replace('-',' '))[0],dayfirst=True)
                             except:
-                                mevzuat_tarihi=np.nan
+                                try:
+                                    mevzuat_tarihi=pd.to_datetime(re.findall(r'\d{1}/\d{1}/\d{4}', std_txt)[0],dayfirst=True)
+                                except:
+                                    mevzuat_tarihi=np.nan
             #######################################################
             elif row_data.kategori == 'Cumhurbaşkanlığı Kararnamesi':
                 mevzuat_tarihi = row_data.data_text.split('\n')[-1]
@@ -412,37 +415,9 @@ class MevzuatTarihiExtractor(FeatureExtractor):
                     pass
         except:
             pass
-        
+        try:
+            mevzuat_tarihi=str(mevzuat_tarihi.date())
+        except:
+            pass
+            
         return mevzuat_tarihi
-    
-
-class KurumExtractor(FeatureExtractor):
-    def __init__(self):
-        super().__init__()
-        self.feature_name = "kurum"
-        self.cols = constants.COLS_KURUM
-        self.kurumlar = constants.KURUMLAR
-
-    def _extractor_func(self, row_data):
-        std_text = row_data.data_text.split('Bu Tebliğ')[-1]
-        kurum = np.nan
-        
-        if row_data.kategori == 'Tebliğ' :
-            items=[]
-            #std_text=std_text.split('Bu Tebliğ')[-1]
-            for item in constants.KURUMLAR:
-                if item in std_text:
-                    items.append(item)
-            print(items)
-            if len(items)>1:
-                kurum=items[0]
-            elif len(items)==0:
-                kurum='Kurum'
-            elif len(items)==1:
-                kurum=items[0]
-            else:
-                kurum = np.nan
-
-        #######################################################
-        return kurum
-
