@@ -10,3 +10,4 @@ tqdm
 notebook
 matplotlib
 unidecode
+dateparser
