@@ -4,6 +4,12 @@ import numpy as np
 import pandas as pd
 import constants
 
+
+def competition_evaluator(gt_df,
+                          pred_df):
+    pass
+
+
 def filter_dataframe(input_df: pd.DataFrame,
                      selected_categories: list = [],
                      custom_filter_array: list = []):
