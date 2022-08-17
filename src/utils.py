@@ -309,6 +309,7 @@ class RegaTarihiExtractor(FeatureExtractor):
 
     def _extractor_func(self, row_data):
         NoneType = type(None)
+        aylar=['ocak','subat','mart','nisan','mayis','haziran','temmuz','agustos','eylul','ekim','kasim','aralik']
         #std_txt = unidecode.unidecode(row_data.data_text).lower()
         rega_tarihi = np.nan
         
@@ -349,7 +350,18 @@ class RegaTarihiExtractor(FeatureExtractor):
                                                 ''.join(std_txt.lower().split('sayı')[0].split(' ')[-4:])
                                                 date2=pd.to_datetime(dateparser.parse(self.tarih_duzelt(a),languages=['tr']),dayfirst=True)
                                                 if type(date2) == NoneType:
-                                                    date2=np.nan
+                                                    std_txt=std_txt.replace(' ','').replace('\n','')
+                                                    for ay in aylar:
+                                                        if ay in std_txt:
+                                                            gun=std_txt.split(ay)[0][-2:]
+                                                            yil=std_txt.split(ay)[1][:4]
+                                                            date2=''.join([gun,ay,yil])
+                                                            date2=pd.to_datetime(dateparser.parse(self.tarih_duzelt(date2),languages=['tr']),dayfirst=True)
+                                                            print(date2)
+                                                            if type(date2) != NoneType:
+                                                                break
+                                                        else:
+                                                            date=np.nan
 
                 rega_tarihi=date2
             #######################################################
@@ -585,56 +597,60 @@ class SiraNoExtractor(FeatureExtractor):
 
     def _extractor_func(self, row_data):
         pattern = "(\d+) (e \| nci|e \| ci|e ] nei|e 1 nci|e 1 nc|e|a) (ek|ilâve|ilave)"
-        std_txt=row_data.data_text.str.lower()\
-                    .str.replace("'", " ")\
-                    .str.replace("©", "ek")\
-                    .str.replace("\(c\)", "ek")\
-                    .str.replace("ek", " ek")\
-                    .str.replace(":", "")\
-                    .replace({"birinci": "1",
-                                "ikinci": "2",
-                                "ücüncü": "3",
-                                "üçüncü": "3",
-                                "dördüncü": "4",
-                                "besinci": "5",
-                                "beşinci": "5",
-                                "altıncı": "6",
-                                "yedinci": "7",
-                                "sekizinci": "8",
-                                "dokuzuncu": "9",
-                                'birinci': '1',
-                                'ikinci': '2',
-                                'ucuncu': '3',
-                                'uçuncu': '3',
-                                'dörduncu': '4',
-                                'besinci': '5',
-                                'beşinci': '5',
-                                'altıncı': '6',
-                                'yedinci': '7',
-                                'sekizinci': '8',
-                                'dokuzuncu': '9'
-                                }, regex=True)\
-                    .str.replace("\s+", " ")\
-                    .str.replace("s ira", "sira")\
-                    .str.replace("slra", "sira")\
-                    .str.replace("ı", "i")\
-                    .str.replace("y", "")
         try:
-            sira_no = str(int(self.iter_pattern(std_txt, pattern, 1))) + " ek 1"#int(re.search(pattern, row).group(2))
-        except Exception as e:
-            pattern = "(\d+) (ek|e+k|e|a) (\d+)"
+
+            std_txt=row_data.data_text.str.lower()\
+                        .str.replace("'", " ")\
+                        .str.replace("©", "ek")\
+                        .str.replace("\(c\)", "ek")\
+                        .str.replace("ek", " ek")\
+                        .str.replace(":", "")\
+                        .replace({"birinci": "1",
+                                    "ikinci": "2",
+                                    "ücüncü": "3",
+                                    "üçüncü": "3",
+                                    "dördüncü": "4",
+                                    "besinci": "5",
+                                    "beşinci": "5",
+                                    "altıncı": "6",
+                                    "yedinci": "7",
+                                    "sekizinci": "8",
+                                    "dokuzuncu": "9",
+                                    'birinci': '1',
+                                    'ikinci': '2',
+                                    'ucuncu': '3',
+                                    'uçuncu': '3',
+                                    'dörduncu': '4',
+                                    'besinci': '5',
+                                    'beşinci': '5',
+                                    'altıncı': '6',
+                                    'yedinci': '7',
+                                    'sekizinci': '8',
+                                    'dokuzuncu': '9'
+                                    }, regex=True)\
+                        .str.replace("\s+", " ")\
+                        .str.replace("s ira", "sira")\
+                        .str.replace("slra", "sira")\
+                        .str.replace("ı", "i")\
+                        .str.replace("y", "")
             try:
-                sira_no = str(int(self.iter_pattern(std_txt, pattern, 1))) + " ek " + str(int(self.iter_pattern(std_txt, pattern, 3)))
+                sira_no = str(int(self.iter_pattern(std_txt, pattern, 1))) + " ek 1"#int(re.search(pattern, row).group(2))
             except Exception as e:
-                pattern = "(s\.|sira) saisi (\d+)"
+                pattern = "(\d+) (ek|e+k|e|a) (\d+)"
                 try:
-                    sira_no = str(int(self.iter_pattern(std_txt, pattern, 2)))
+                    sira_no = str(int(self.iter_pattern(std_txt, pattern, 1))) + " ek " + str(int(self.iter_pattern(std_txt, pattern, 3)))
                 except Exception as e:
-                    sira_no = 0
+                    pattern = "(s\.|sira) saisi (\d+)"
+                    try:
+                        sira_no = str(int(self.iter_pattern(std_txt, pattern, 2)))
+                    except Exception as e:
+                        sira_no = 0
+                    else:
+                        pass
                 else:
                     pass
-            else:
-                pass
+        except:
+            sira_no=np.nan
 
         return sira_no
 
