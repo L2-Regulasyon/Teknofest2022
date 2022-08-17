@@ -304,6 +304,7 @@ class RegaTarihiExtractor(FeatureExtractor):
         text = text.replace('mayis', 'mayıs')
         text = text.replace('ekım', 'ekim')
         text = text.replace('kasim', 'kasım')
+        text = text.replace('aralik', 'aralık')
         return text
 
     def _extractor_func(self, row_data):
@@ -320,8 +321,8 @@ class RegaTarihiExtractor(FeatureExtractor):
                 rega_tarihi =  std_txt.split("resmi gazete tarihi: ", 1)[1].split('resmi gazete sayisi:', 1)[0]
             #######################################################
             elif row_data.kategori == 'Resmi Gazete':
-                std_txt = row_data.data_text.lower()
-                a=std_txt.split('sayı')[0].replace(' ','').split('\n')
+                std_txt = unidecode.unidecode(row_data.data_text).lower()
+                a=std_txt.split('sayi')[0].replace(' ','').split('\n')
                 while '' in a:
                     a.remove('')
                 date2=pd.to_datetime(dateparser.parse(self.tarih_duzelt(a[-2]),languages=['tr']),dayfirst=True)
@@ -345,6 +346,7 @@ class RegaTarihiExtractor(FeatureExtractor):
                                             date2=pd.to_datetime(dateparser.parse(self.tarih_duzelt(a[-3]),languages=['tr']),dayfirst=True)
                                             if type(date2) == NoneType:
                                                 a=''.join(std_txt.lower().split('sayı')[0].split(' ')[-4:])
+                                                ''.join(std_txt.lower().split('sayı')[0].split(' ')[-4:])
                                                 date2=pd.to_datetime(dateparser.parse(self.tarih_duzelt(a),languages=['tr']),dayfirst=True)
                                                 if type(date2) == NoneType:
                                                     date2=np.nan
