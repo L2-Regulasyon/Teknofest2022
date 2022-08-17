@@ -482,3 +482,159 @@ class MevzuatTarihiExtractor(FeatureExtractor):
             mevzuat_tarihi=np.nan
             
         return mevzuat_tarihi
+
+class RegaNoExtractor(FeatureExtractor):
+    def __init__(self):
+        super().__init__()
+        self.feature_name = "rega_no"
+        self.cols = constants.COLS_REGA_NO
+
+    def iter_pattern(string, pattern, group=2):
+        collection = re.finditer(pattern, string)
+
+        if not collection:
+            raise Exception(f"The pattern {pattern} isn't found in {string}")
+
+        for match in collection:
+            try:
+                match_ = match.group(group)
+            except Exception as e:
+                raise e
+            else:
+                break
+            
+        return match_
+
+    def _extractor_func(self, row_data):
+        pattern = "(sayı:)(\d+)"
+
+        std_txt = row_data.data_text.str.lower()\
+                                     .str.replace("\n+", "***")\
+                                     .str.replace("\s+", "")\
+                                     .str.replace("sayi", "sayı")\
+                                     .str.replace("sayısı", "sayı")\
+                                     .str.replace("sayılı", "sayı")\
+                                     .str.replace("sayıfa", "sayfa")
+        try:
+            rega_no = int(self.iter_pattern(std_txt, pattern, 2))#int(re.search(pattern, row).group(2))
+        except Exception as e:
+            try:
+                pattern = "(\d+)(sayı)"
+                rega_no = int(self.iter_pattern(std_txt, pattern, 1))#int(re.search(pattern, row).group(1))
+            except Exception as e:
+                #print(std_txt, e)
+                rega_no = None
+        return rega_no
+
+class MukerrerNoExtractor(FeatureExtractor):
+    def __init__(self):
+        super().__init__()
+        self.feature_name = "mukerrer_no"
+        self.cols = constants.COLS_MUKERRER_NO
+
+    def iter_pattern(string, pattern, group=2):
+        collection = re.finditer(pattern, string)
+
+        if not collection:
+            raise Exception(f"The pattern {pattern} isn't found in {string}")
+
+        for match in collection:
+            try:
+                match_ = match.group(group)
+            except Exception as e:
+                raise e
+            else:
+                break
+            
+        return match_
+
+    def _extractor_func(self, row_data):
+        pattern = "(\d+)\. mükerrer"
+        std_txt = row_data.data_text.str.lower()
+        try:
+            mukerrer_no = int(self.iter_pattern(std_txt, pattern, 1))#int(re.search(pattern, row).group(2))
+        except Exception as e:
+            print(std_txt, e)
+            mukerrer_no = 0
+
+        return mukerrer_no
+
+
+
+class SiraNoExtractor(FeatureExtractor):
+    def __init__(self):
+        super().__init__()
+        self.feature_name = "sira_no"
+        self.cols = constants.COLS_SIRA_NO
+
+    def iter_pattern(string, pattern, group=2):
+        collection = re.finditer(pattern, string)
+
+        if not collection:
+            raise Exception(f"The pattern {pattern} isn't found in {string}")
+
+        for match in collection:
+            try:
+                match_ = match.group(group)
+            except Exception as e:
+                raise e
+            else:
+                break
+            
+        return match_
+
+    def _extractor_func(self, row_data):
+        pattern = "(\d+) (e \| nci|e \| ci|e ] nei|e 1 nci|e 1 nc|e|a) (ek|ilâve|ilave)"
+        std_txt=row_data.data_text.str.lower()\
+                    .str.replace("'", " ")\
+                    .str.replace("©", "ek")\
+                    .str.replace("\(c\)", "ek")\
+                    .str.replace("ek", " ek")\
+                    .str.replace(":", "")\
+                    .replace({"birinci": "1",
+                                "ikinci": "2",
+                                "ücüncü": "3",
+                                "üçüncü": "3",
+                                "dördüncü": "4",
+                                "besinci": "5",
+                                "beşinci": "5",
+                                "altıncı": "6",
+                                "yedinci": "7",
+                                "sekizinci": "8",
+                                "dokuzuncu": "9",
+                                'birinci': '1',
+                                'ikinci': '2',
+                                'ucuncu': '3',
+                                'uçuncu': '3',
+                                'dörduncu': '4',
+                                'besinci': '5',
+                                'beşinci': '5',
+                                'altıncı': '6',
+                                'yedinci': '7',
+                                'sekizinci': '8',
+                                'dokuzuncu': '9'
+                                }, regex=True)\
+                    .str.replace("\s+", " ")\
+                    .str.replace("s ira", "sira")\
+                    .str.replace("slra", "sira")\
+                    .str.replace("ı", "i")\
+                    .str.replace("y", "")
+        try:
+            sira_no = str(int(self.iter_pattern(std_txt, pattern, 1))) + " ek 1"#int(re.search(pattern, row).group(2))
+        except Exception as e:
+            pattern = "(\d+) (ek|e+k|e|a) (\d+)"
+            try:
+                sira_no = str(int(self.iter_pattern(std_txt, pattern, 1))) + " ek " + str(int(self.iter_pattern(std_txt, pattern, 3)))
+            except Exception as e:
+                pattern = "(s\.|sira) saisi (\d+)"
+                try:
+                    sira_no = str(int(self.iter_pattern(std_txt, pattern, 2)))
+                except Exception as e:
+                    sira_no = 0
+                else:
+                    pass
+            else:
+                pass
+
+        return sira_no
+
