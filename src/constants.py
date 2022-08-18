@@ -12,7 +12,8 @@ COLS_MEVZUAT_TARIHI = ["Kanun", "Kanun Hükmünde Kararname",
                      "Tüzük", "Özelge"]
 COLS_REGA_NO = ["Kanun", "Kanun Hükmünde Kararname","Resmi Gazete", "Cumhurbaşkanlığı Kararnamesi",
                      "Tüzük","Yönetmelik", "Tebliğ"]
-COLS_MUKERRER_NO= ["Kanun", "Kanun Hükmünde Kararname","Resmi Gazete", "Cumhurbaşkanlığı Kararnamesi",
+COLS_MUKERRER_NO = ["Kanun", "Kanun Hükmünde Kararname","Resmi Gazete", "Cumhurbaşkanlığı Kararnamesi",
                      "Tüzük","Yönetmelik", "Tebliğ"]
+COLS_DONEM = ['Komisyon Raporu']
 COLS_SIRA_NO = ["Komisyon Raporu"]
 NAN_LABEL = "undefined"

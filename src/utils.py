@@ -433,7 +433,7 @@ class DonemExtractor(FeatureExtractor):
     def __init__(self,submission_mode=False):
         super().__init__(submission_mode)
         self.feature_name = "donem"
-        self.cols = ['Komisyon Raporu']
+        self.cols = constants.COLS_DONEM
         
     def _extractor_func(self, row_data):
         #std_txt = row_data.data_text#.lower().replace(' ','')
@@ -463,7 +463,6 @@ class DonemExtractor(FeatureExtractor):
         except:
             pass
         return donem
-
 class FeatureExtractor_Vectorized(FeatureExtractor):
     def __init__(self, submission_mode=False):
         super().__init__(submission_mode=submission_mode)
@@ -595,36 +594,12 @@ class MukerrerNoExtractor(FeatureExtractor_Vectorized):
         super().__init__(submission_mode)
         self.feature_name = "mukerrer_no"
         self.cols = constants.COLS_MUKERRER_NO
-
-    def iter_pattern(string, pattern, group=2):
-        collection = re.finditer(pattern, string)
-
-        if not collection:
-            raise Exception(f"The pattern {pattern} isn't found in {string}")
-
-        for match in collection:
-            try:
-                match_ = match.group(group)
-            except Exception as e:
-                raise e
-            else:
-                break
-
-        return match_
+        self.valid_one_cases = pd.Series()
 
     def _pre_process_func(self, col_data):
-        return col_data.astype(str).str.lower()\
-                       .str.replace("\s+", " ")
+        return col_data.astype(str).str.lower().str.replace("\s+", " ")
 
     def _post_process_func(self, col_data):
-        import pdb
-        #pdb.set_trace()
-        #print(type(col_data))
-
-        cond = (col_data.astype(str).str.lower().str.replace("\s+", " ").str.contains("(\d+)\. mükerrer")) &\
-               (col_data.astype(str).str.lower().str.split('\n').str.get(0).str.contains("mükerrer"))
-        col_data.loc[cond] = 1
-        
         return col_data
 
     def _extractor_func(self, row_data):
@@ -633,7 +608,16 @@ class MukerrerNoExtractor(FeatureExtractor_Vectorized):
         try:
           mukerrer_no = int(self.iter_pattern(row_data, pattern, 1))#int(re.search(pattern, row).group(2))
         except Exception as e:
-          mukerrer_no = 0
+
+          try:
+            pattern = "(\d+) mükerrer"
+            mukerrer_no = int(self.iter_pattern(row_data, pattern, 1))#int(re.search(pattern, row).group(2))
+            if mukerrer_no and mukerrer_no > 10:
+                mukerrer_no = 1
+
+          except Exception as e:
+              mukerrer_no = 0
+              pass
 
         return mukerrer_no
 
@@ -667,6 +651,7 @@ class RegaNoExtractor(FeatureExtractor_Vectorized):
               rega_no = int(self.iter_pattern(row_data, pattern, 1))#int(re.search(pattern, row).group(1))
             
             except Exception as e:
+                #print(e)
                 rega_no = None
 
         return rega_no
