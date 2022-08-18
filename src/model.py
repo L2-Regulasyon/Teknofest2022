@@ -1,13 +1,13 @@
 from utils import (
-BelgeSayisiExtractor,
-SiraNoExtractor,
 RegaNoExtractor,
+SiraNoExtractor,
 MukerrerNoExtractor,
-MaddeSayisiExtractor,
+DonemExtractor,
 RegaTarihiExtractor,
 MevzuatNoExtractor,
+BelgeSayisiExtractor,
 MevzuatTarihiExtractor,
-DonemExtractor
+MaddeSayisiExtractor,
 )
 
 from catboost import Pool, CatBoostClassifier
@@ -21,9 +21,9 @@ class AcikhackModel:
         self.classifier = None
         self.feature_extractors = [
             BelgeSayisiExtractor(submission_mode=True),
-            # SiraNoExtractor(submission_mode=True),
-            # RegaNoExtractor(submission_mode=True),
-            # MukerrerNoExtractor(submission_mode=True),
+            SiraNoExtractor(submission_mode=True),
+            RegaNoExtractor(submission_mode=True),
+            MukerrerNoExtractor(submission_mode=True),
             MaddeSayisiExtractor(submission_mode=True),
             RegaTarihiExtractor(submission_mode=True),
             MevzuatNoExtractor(submission_mode=True),

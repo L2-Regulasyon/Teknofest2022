@@ -48,3 +48,9 @@ Yarışma dahilinde ekibimize sağlanan veride bazı tutarsızlıklar ve çıkma
 - `KAYSIS` kaynaklı bazı verilerde asıl etiket değeri `32945953-010.06.01-E.1046330` kodunun `1046330` kısmı olarak verilmişken bazı verilerde `YIL/NUMARA` olarak verilmiş. Satırlardan iki türlü de veri alabiliyoruz fakat beklenen formatın hangisi olduğu net olmadığı için `YIL/NUMARA` formatında bıraktık.
 - Bazı verilerin mevzuat numaralarının tamamı ya da bir kısmı el ile yazıldığı için OCR tarafından eksik veya hatalı okunmuş. Modelin yanlışlarının bazıları OCR'dan gelen ham verinin yanlışlığından kaynaklanıyor. Orjinal siteye gidip veriyi özel bir şekilde işlemek hem zaman hem kaynak açısından problemli olacağından bu kol üzerine yoğunlaşmadık.
 - `https://kms.kaysis.gov.tr/Home/Goster/68870` adresine sahip verinin text sütunu hatalı olduğu için herhangi bir şekilde veri çıkarmak mümkün değil.
+
+#### Rega Tarihi
+- Kanun kategorisinde `25 TEŞRİNİSANİ 1931`,`7 KÂNUNUSANİ 1930` gibi osmanlıca tarihler bulunmaktadır. Bu tarihleri haritalandırarak kodlamak mümkün olsa da, pdf formatından aktarılan metinlerdeki bozulma eski tarihli dosyaların tahminini güçleştirmektedir.
+
+#### Dönem
+- Komisyon raporlarında `data_text` içinde 189 kayıtta `Dönem` e benzer bir bilgi bulunmamaktadır. Bu nedenle dönem bilgisine erişilememektedir. 
