@@ -464,13 +464,34 @@ class DonemExtractor(FeatureExtractor):
             pass
         return donem
 
-class RegaNoExtractor(FeatureExtractor):
+class FeatureExtractor_Vectorized(FeatureExtractor):
     def __init__(self, submission_mode=False):
-        super().__init__(submission_mode)
-        self.feature_name = "rega_no"
-        self.cols = constants.COLS_REGA_NO
+        super().__init__(submission_mode=submission_mode)
 
-    def iter_pattern(string, pattern, group=2):
+    def extract(self, input_df):
+        output_col_name = self.feature_name + '_pred' if not self.submission_mode else self.feature_name
+        print(f"'{self.feature_name}' cikariliyor... -> '{output_col_name}'")
+        feature_indexer = input_df.kategori.isin(self.cols)
+
+        if not self.submission_mode:
+            input_df[output_col_name] = np.nan
+
+
+        input_df.loc[feature_indexer,
+                     output_col_name] = self._post_process_func(self._pre_process_func(input_df.loc[feature_indexer, "data_text"]).apply(
+                                                                self._extractor_func
+                                                                ))
+                     
+    def _extractor_func(self, row_data):
+        raise NotImplementedError()
+
+    def _pre_process_func(self, col_data):
+        return col_data
+
+    def _post_process_func(self, col_data):
+        return col_data
+    
+    def iter_pattern(self, string, pattern, group=2):
         collection = re.finditer(pattern, string)
 
         if not collection:
@@ -486,39 +507,90 @@ class RegaNoExtractor(FeatureExtractor):
 
         return match_
 
+    def extract(self, input_df):
+        output_col_name = self.feature_name + '_pred' if not self.submission_mode else self.feature_name
+        print(f"'{self.feature_name}' cikariliyor... -> '{output_col_name}'")
+        feature_indexer = input_df.kategori.isin(self.cols)
+
+        if not self.submission_mode:
+            input_df[output_col_name] = np.nan
+        input_df.loc[feature_indexer,
+                     output_col_name] = self._post_process_func(self._pre_process_func(input_df.loc[feature_indexer, "data_text"]).apply(
+                                                                self._extractor_func
+                                                                ))
+class SiraNoExtractor(FeatureExtractor_Vectorized):
+    def __init__(self, submission_mode=False):
+        super().__init__(submission_mode)
+        self.feature_name = "sira_no"
+        self.cols = constants.COLS_SIRA_NO
+
+    def _pre_process_func(self, col_data):
+        return col_data.str.lower()\
+                    .str.replace("'", " ")\
+                    .str.replace("©", "ek")\
+                    .str.replace("\(c\)", "ek")\
+                    .str.replace("ek", " ek")\
+                    .str.replace(":", "")\
+                    .replace({"birinci": "1",
+                                "ikinci": "2",
+                                "ücüncü": "3",
+                                "üçüncü": "3",
+                                "dördüncü": "4",
+                                "besinci": "5",
+                                "beşinci": "5",
+                                "altıncı": "6",
+                                "yedinci": "7",
+                                "sekizinci": "8",
+                                "dokuzuncu": "9",
+                                'birinci': '1',
+                                'ikinci': '2',
+                                'ucuncu': '3',
+                                'uçuncu': '3',
+                                'dörduncu': '4',
+                                'besinci': '5',
+                                'beşinci': '5',
+                                'altıncı': '6',
+                                'yedinci': '7',
+                                'sekizinci': '8',
+                                'dokuzuncu': '9'
+                                }, regex=True)\
+                    .str.replace("\s+", " ")\
+                    .str.replace("s ira", "sira")\
+                    .str.replace("slra", "sira")\
+                    .str.replace("ı", "i")\
+                    .str.replace("y", "")\
+    
+    def _post_process_func(self, col_data):
+        return col_data
+
     def _extractor_func(self, row_data):
-        pattern = "(sayı:)(\d+)"
-        rega_no = row_data[self.feature_name]
+        pattern = "(\d+) (e \| nci|e \| ci|e ] nei|e 1 nci|e 1 nc|e|a) (ek|ilâve|ilave)"
 
-        std_txt = row_data.data_text.lower() \
-            .replace("\n+", "***") \
-            .replace("\s+", "") \
-            .replace("sayi", "sayı") \
-            .replace("sayısı", "sayı") \
-            .replace("sayılı", "sayı") \
-            .replace("sayıfa", "sayfa")
         try:
-            rega_no = int(self.iter_pattern(std_txt, pattern, 2))  # int(re.search(pattern, row).group(2))
+          sira_no = str(int(self.iter_pattern(row_data, pattern, 1))) + " ek 1"#int(re.search(pattern, row).group(2))
         except Exception as e:
+          pattern = "(\d+) (ek|e+k|e|a) (\d+)"
+          try:
+            sira_no = str(int(self.iter_pattern(row_data, pattern, 1))) + " ek " + str(int(self.iter_pattern(row_data, pattern, 3)))
+
+          except Exception as e:
+            pattern = "(s\.|sira) saisi (\d+)"
             try:
-                pattern = "(\d+)(sayı)"
-                rega_no = int(self.iter_pattern(std_txt, pattern, 1))  # int(re.search(pattern, row).group(1))
+              sira_no = str(int(self.iter_pattern(row_data, pattern, 2)))
+
             except Exception as e:
-                # print(std_txt, e)
-                pass #rega_no = None
+              sira_no = 0
 
-        if np.isnan(rega_no):
-            rega_no = ""
+            else:
+              pass
 
-        try:
-            rega_no = str(rega_no).slice(0, 5).replace("", np.nan)
-        except:
+          else:
             pass
 
-        return rega_no
+        return sira_no
 
 
-class MukerrerNoExtractor(FeatureExtractor):
+class MukerrerNoExtractor(FeatureExtractor_Vectorized):
     def __init__(self, submission_mode=False):
         super().__init__(submission_mode)
         self.feature_name = "mukerrer_no"
@@ -540,100 +612,61 @@ class MukerrerNoExtractor(FeatureExtractor):
 
         return match_
 
+    def _pre_process_func(self, col_data):
+        return col_data.astype(str).str.lower()\
+                       .str.replace("\s+", " ")
+
+    def _post_process_func(self, col_data):
+        import pdb
+        #pdb.set_trace()
+        #print(type(col_data))
+
+        cond = (col_data.astype(str).str.lower().str.replace("\s+", " ").str.contains("(\d+)\. mükerrer")) &\
+               (col_data.astype(str).str.lower().str.split('\n').str.get(0).str.contains("mükerrer"))
+        col_data.loc[cond] = 1
+        
+        return col_data
+
     def _extractor_func(self, row_data):
         pattern = "(\d+)\. mükerrer"
-        std_txt = row_data.data_text.lower()
-        mukerrer_no = row_data[self.feature_name]
+
         try:
-            mukerrer_no = int(self.iter_pattern(std_txt, pattern, 1))  # int(re.search(pattern, row).group(2))
+          mukerrer_no = int(self.iter_pattern(row_data, pattern, 1))#int(re.search(pattern, row).group(2))
         except Exception as e:
-            pass
-            #print(std_txt, e)
+          mukerrer_no = 0
 
         return mukerrer_no
 
-
-class SiraNoExtractor(FeatureExtractor):
+class RegaNoExtractor(FeatureExtractor_Vectorized):
     def __init__(self, submission_mode=False):
         super().__init__(submission_mode)
-        self.feature_name = "sira_no"
-        self.cols = constants.COLS_SIRA_NO
+        self.feature_name = "rega_no"
+        self.cols = constants.COLS_REGA_NO
 
-    def iter_pattern(string, pattern, group=2):
-        collection = re.finditer(pattern, string)
+    def _post_process_func(self, col_data):
+        return col_data.fillna("").astype(str).str.split(".").str.get(0).str.replace(".", "").str.slice(0, 5).replace("", np.nan)
 
-        if not collection:
-            raise Exception(f"The pattern {pattern} isn't found in {string}")
-
-        for match in collection:
-            try:
-                match_ = match.group(group)
-            except Exception as e:
-                raise e
-            else:
-                break
-
-        return match_
+    def _pre_process_func(self, col_data):
+        return col_data.str.lower()\
+                       .str.replace("\n+", "***")\
+                       .str.replace("\s+", "")\
+                       .str.replace("sayi", "sayı")\
+                       .str.replace("sayısı", "sayı")\
+                       .str.replace("sayılı", "sayı")\
+                       .str.replace("sayıfa", "sayfa")
 
     def _extractor_func(self, row_data):
-        pattern = "(\d+) (e \| nci|e \| ci|e ] nei|e 1 nci|e 1 nc|e|a) (ek|ilâve|ilave)"
-        sira_no = row_data[self.feature_name]
+        pattern = "(sayı:)(\d+)"
+
         try:
-
-            std_txt = row_data.data_text.str.lower() \
-                .str.replace("'", " ") \
-                .str.replace("©", "ek") \
-                .str.replace("\(c\)", "ek") \
-                .str.replace("ek", " ek") \
-                .str.replace(":", "") \
-                .replace({"birinci": "1",
-                          "ikinci": "2",
-                          "ücüncü": "3",
-                          "üçüncü": "3",
-                          "dördüncü": "4",
-                          "besinci": "5",
-                          "beşinci": "5",
-                          "altıncı": "6",
-                          "yedinci": "7",
-                          "sekizinci": "8",
-                          "dokuzuncu": "9",
-                          'birinci': '1',
-                          'ikinci': '2',
-                          'ucuncu': '3',
-                          'uçuncu': '3',
-                          'dörduncu': '4',
-                          'besinci': '5',
-                          'beşinci': '5',
-                          'altıncı': '6',
-                          'yedinci': '7',
-                          'sekizinci': '8',
-                          'dokuzuncu': '9'
-                          }, regex=True) \
-                .str.replace("\s+", " ") \
-                .str.replace("s ira", "sira") \
-                .str.replace("slra", "sira") \
-                .str.replace("ı", "i") \
-                .str.replace("y", "")
+          rega_no = int(self.iter_pattern(row_data, pattern, 2))#int(re.search(pattern, row).group(2))
+        except Exception as e:
+            
             try:
-                sira_no = str(
-                    int(self.iter_pattern(std_txt, pattern, 1))) + " ek 1"  # int(re.search(pattern, row).group(2))
+              pattern = "(\d+)(sayı)"
+              rega_no = int(self.iter_pattern(row_data, pattern, 1))#int(re.search(pattern, row).group(1))
+            
             except Exception as e:
-                pattern = "(\d+) (ek|e+k|e|a) (\d+)"
-                try:
-                    sira_no = str(int(self.iter_pattern(std_txt, pattern, 1))) + " ek " + str(
-                        int(self.iter_pattern(std_txt, pattern, 3)))
-                except Exception as e:
-                    pattern = "(s\.|sira) saisi (\d+)"
-                    try:
-                        sira_no = str(int(self.iter_pattern(std_txt, pattern, 2)))
-                    except Exception as e:
-                        pass  # ??? sira_no = 0
-                    else:
-                        pass
-                else:
-                    pass
-        except:
-            pass  # sira_no=np.nan
+                rega_no = None
 
-        return sira_no
-
+        return rega_no
