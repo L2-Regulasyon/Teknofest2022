@@ -6,7 +6,8 @@ MukerrerNoExtractor,
 MaddeSayisiExtractor,
 RegaTarihiExtractor,
 MevzuatNoExtractor,
-MevzuatTarihiExtractor
+MevzuatTarihiExtractor,
+DonemExtractor
 )
 
 from catboost import Pool, CatBoostClassifier
@@ -26,7 +27,8 @@ class AcikhackModel:
             MaddeSayisiExtractor(submission_mode=True),
             RegaTarihiExtractor(submission_mode=True),
             MevzuatNoExtractor(submission_mode=True),
-            MevzuatTarihiExtractor(submission_mode=True)
+            MevzuatTarihiExtractor(submission_mode=True),
+            DonemExtractor(submission_mode=True)
         ]
 
     def post_process(self, input_df):
