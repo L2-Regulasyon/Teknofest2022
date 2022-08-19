@@ -12,7 +12,7 @@ class FeatureExtractor:
         self.feature_name = None
         self.cols = []
         self.submission_mode = submission_mode
-        print("Yarisma submission modu:", "ACIK" if self.submission_mode else "KAPALI")
+        # print("Yarisma submission modu:", "ACIK" if self.submission_mode else "KAPALI")
 
     def _extractor_func(self, row_data):
         raise NotImplementedError()

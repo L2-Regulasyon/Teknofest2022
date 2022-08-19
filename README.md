@@ -20,7 +20,23 @@ conda activate acikhack
 ```
 
 ### Uygulamanın Çalıştırılması
-Şu an proje sayfasından analiz ve başlangıç kodlarına ulaşılabilir.  `/notebook` klasörü altındaki notebook dosyalarını:
+Aşağıdaki kod ile tanımlayacağınız veri ile bütün süreci koşup çıktı alabilirsiniz. Sonuçlar aynı dizine `ornek-eval-dataset.csv` ismi altında kaydedilecektir.
+```bash
+python run.py -data-path VERI_ADRESI
+```
+
+Aşağıdaki kod ile eğitim için verilen veriyi tanımlayarak süreci koşabilir ve başarı skorunu görüntüleyebilirsiniz.
+```bash
+python run_debug.py -data-path VERI_ADRESI
+```
+
+Aşağıdaki kod ile ürettiğiniz tahminleri ve ground-truth verileri besleyerek sadece skorlama rutinini çalıştırabilirsiniz.
+```bash
+python scorer.py -gt-data-path ORJINAL_VERI_ADRESI -pred-data-path TAHMIN_VERI_ADRESI
+```
+
+### Analiz Dosyaları
+`/notebook` klasörü altındaki notebook dosyalarını:
 ```bash
 jupyter notebook
 ```
