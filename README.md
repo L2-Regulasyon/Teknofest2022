@@ -42,6 +42,25 @@ jupyter notebook
 ```
 yazıp bir jupyter server açtıktan sonra inceleyebilirsiniz.
 
+### Referans Sonuçlar
+
+Verilen örnek veri üzerinde elde ettiğimiz sonuçlar aşağıdaki gibidir.
+
+| Sütun          | Başarı Oranı       |
+|----------------|--------------------|
+| rega_no        | 0.9830999517141478 |
+| sira_no        | 0.990584258812168  |
+| mukerrer_no    | 0.9693384838242395 |
+| donem          | 0.9616127474649928 |
+| kategori       | 0.9739256397875422 |
+| rega_tarihi    | 0.9524384355383873 |
+| mevzuat_no     | 0.9683727667793337 |
+| belge_sayi     | 0.990584258812168  |
+| mevzuat_tarihi | 0.9589570255915016 |
+| madde_sayisi   | 0.9954128440366973 |
+
+**Yarışma metriği:** 0.831723804925157
+
 ### Paket Sürümlerinin Ayarlanması (Opsiyonel)
 Projeyi doğrudan çalıştırmak istiyorsanız bu adımı atlayabilirsiniz. Fakat proje ortamında kullanılan kütüphanelere ekleme veya değişiklik yapmak istiyorsanız aşağıdaki rutini izlemelisiniz.
 Eğer bir kütüphane eklemek istiyorsanız, ismini `req.in` dosyasına ekleyin,  ve `req.txt` dosyasını aşağıdaki komut ile yeniden oluşturun.
